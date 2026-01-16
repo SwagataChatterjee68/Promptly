@@ -5,7 +5,11 @@ const initSocketServer = require("./src/sockets/socket.server");
 const httpServer = require("http").createServer(app);
 
 connectDB();
-initSocketServer(httpServer);
+initSocketServer(httpServer, {
+  cors: {
+    origin: "http://localhost:5174",
+  },
+});
 
 httpServer.listen(3000, () => {
   console.log("server is running on port 3000");

@@ -7,7 +7,12 @@ const messageModel = require("../models/aiMessage.model");
 const { createMemory, queryMemory } = require("../services/vector.service");
 
 const initSocketServer = (httpServer) => {
-  const io = new Server(httpServer, {});
+  const io = new Server(httpServer, {
+    cors: {
+      origin: ["http://localhost:5173", "http://localhost:5174"], // Ensure your frontend URL is here
+      credentials: true,
+    },
+  });
 
   io.use(async (socket, next) => {
     const cookies = cookie.parse(socket.handshake.headers?.cookie || "");
@@ -18,7 +23,6 @@ const initSocketServer = (httpServer) => {
     }
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
       const user = await userModel.findById(decoded.id);
       socket.user = user;
       next();
@@ -26,20 +30,33 @@ const initSocketServer = (httpServer) => {
       next(new Error("Authentication error"));
     }
   });
-  io.on("connection", (socket) => {
-    socket.on("ai-message", async (messagePayload) => {
 
-      const [message, vector] = await Promise.all([
-        messageModel.create({
+  io.on("connection", (socket) => {
+
+   socket.on("ai-message", async (messagePayload) => {
+      try {
+        // 1. Save user message to DB
+        const message = await messageModel.create({
           content: messagePayload.content,
           user: socket.user._id,
           chat: messagePayload.chat,
           role: "user",
-        }),
-        generateVector(messagePayload.content)
-      ]);
+        });
 
-      await createMemory({
+        // 2. Generate vector
+        const vector = await generateVector(messagePayload.content);
+
+        // 3. Query similar memories
+        const memory = await queryMemory({
+          queryVector: vector,
+          metadata: {
+            user: socket.user._id,
+          },
+          limit: 3,
+        });
+
+        // 4. Save user message to Vector DB
+        await createMemory({
           vectors: vector,
           metadata: {
             chat: messagePayload.chat,
@@ -49,89 +66,81 @@ const initSocketServer = (httpServer) => {
           messageID: message._id,
         });
 
-      const [memory, chatHistory] = await Promise.all([
-        queryMemory({
-          queryVector: vector,
-          metadata: {
-            user: socket.user._id,
+        // 5. Fetch chat history (Last 3 messages)
+        const chatHistory = (
+          await messageModel
+            .find({
+              chat: messagePayload.chat,
+            })
+            .sort({ createdAt: -1 })
+            .limit(3)
+            .lean()
+        ).reverse();
+
+        // 6. Create Short Term Memory
+        const shortTermMemory = chatHistory.map((item) => {
+          return {
+            role: item.role,
+            parts: [{ text: item.content }],
+          };
+        });
+
+        // 7. Create Long Term Memory (FIXED SYNTAX ERROR HERE)
+        const longTermMemory = [
+          {
+            role: "user",
+            parts: [
+              {
+                // Added backticks (`) below so the string works
+                text: `These are some last three messages from the chat use them to generate response ${memory
+                  .map((item) => item.metadata.text)
+                  .join(" ")}`, 
+              },
+            ],
           },
-          limit: 3,
-        }),
-        messageModel
-          .find({
-            chat: messagePayload.chat,
-          })
-          .sort({ createdAt: -1 })
-          .limit(3)
-          .lean(),
-      ]);
+        ];
 
-      // short term memory is created from the chat history
+        // 8. Generate AI Response
+        const response = await generateResponse([
+          ...longTermMemory,
+          ...shortTermMemory,
+        ]);
 
-      const shortTermMemory = chatHistory.map((item) => {
-        return {
-          role: item.role,
-          parts: [
-            {
-              text: item.content,
-            },
-          ],
-        };
-      });
-
-      // long term memory is created by using the memory from the vector database
-
-      const longTermMemory = [
-        {
-          role: "user",
-          parts: [
-            {
-              text: `These are some last three messages from the chat use them to generate response
-              ${memory.map((item) => item.metadata.text).join("\n ")}
-              
-              `,
-            },
-          ],
-        },
-      ];
-
-      // response is generated from the ai model using long term memory and short term memory
-
-      const response = await generateResponse([
-        ...longTermMemory,
-        ...shortTermMemory,
-      ]);
-
-       // ai response is sent back to the user
-
-      socket.emit("ai-message-response", {
-        content: response,
-        chat: messagePayload.chat,
-      });
-
-      const [responseMessage, responseVector] = await Promise.all([
-        messageModel.create({
+        // 9. Save AI Response to DB
+        const responseMessage = await messageModel.create({
           content: response,
           user: socket.user._id,
           chat: messagePayload.chat,
           role: "model",
-        }),
-        generateVector(response),
-      ]);
+        });
 
-      // ai response vector is saved in the vector database
+        // 10. Vectorize and Save AI Response
+        const responseVector = await generateVector(responseMessage.content);
 
-      await createMemory({
-        vectors: responseVector,
-        metadata: {
+        await createMemory({
+          vectors: responseVector,
+          metadata: {
+            chat: messagePayload.chat,
+            user: socket.user._id,
+            text: response,
+          },
+          messageID: responseMessage._id,
+        });
+
+        // 11. Send back to client
+        socket.emit("ai-message-response", {
+          content: response,
           chat: messagePayload.chat,
-          user: socket.user._id,
-          text: response,
-        },
-        messageID: responseMessage._id,
-      });
+        });
 
+      } catch (error) {
+        console.error("Error in ai-message handler:", error);
+        // Optional: Emit error to client so they know something went wrong
+        // socket.emit("error", "Something went wrong processing your message");
+      }
     });
+    // --- END OF YOUR CODE ---
   });
 };
+
 module.exports = initSocketServer;

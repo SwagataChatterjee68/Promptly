@@ -94,8 +94,20 @@ const logoutController = (req, res) => {
   });
 };
 
+const profileController =  (req, res) => {
+  res.status(200).json({
+    success: true,
+    user: {
+      id: req.user._id,
+      fullName: req.user.fullName,
+      email: req.user.email
+    }
+  });
+}
+
 module.exports = {
   registerController,
   loginController,
   logoutController,
+  profileController
 };

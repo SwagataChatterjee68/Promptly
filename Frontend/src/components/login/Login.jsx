@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../../context/authContext";
 import axios from "axios";
 import {
   Bot,
   Eye,
   EyeOff,
   ArrowRight,
-  Github,
   AlertCircle,
   Loader2,
 } from "lucide-react";
@@ -18,6 +18,8 @@ const Login = () => {
     email: "",
     password: "",
   });
+
+  const { login } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -53,11 +55,9 @@ const Login = () => {
         }
       );
 
-      // Handle Success
-      if (response.data.user) {
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-      }
-      toast.success("Login successful!");
+      login(response.data.user);
+
+      toast.success("Login Successful!");
       navigate("/");
     } catch (err) {
       // Handle Error
@@ -191,10 +191,6 @@ const Login = () => {
               )}
             </button>
           </form>
-
-          <div className="divider">
-            <span>Or continue with</span>
-          </div>
 
           <p className="footer-link">
             Don't have an account? <Link to="/register">Sign Up</Link>

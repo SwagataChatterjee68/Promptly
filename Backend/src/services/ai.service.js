@@ -34,6 +34,8 @@ async function generateResponse(content) {
     <style>Natural and human-like</style>
     <style>Simple language, easy to understand</style>
     <style>No slang or unnecessary emojis</style>
+    <style>Do not use markdown symbols like ** (bold), *** (bold italics), or - (bullet points).</style>
+    <style>Do not use newlines (\n). Output the response as a single continuous block of text.</style>
   </communication-style>
 
   <memory-usage>
