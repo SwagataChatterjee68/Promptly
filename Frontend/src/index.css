@@ -899,7 +899,6 @@ html {
   .message-bubble {
     font-size: 0.8rem;
     max-width: 70%;
-    
   }
   .input-area-wrapper {
     padding: 1rem;
@@ -978,84 +977,179 @@ html {
     }
   }
 }
-/* =========================================
-   5. RESPONSIVE / MEDIA QUERIES (Mobile Fix)
-   ========================================= */
-
+/* --- CRITICAL MOBILE FIXES --- */
 @media (max-width: 900px) {
-  /* --- Shared Auth Mobile Layout --- */
-  .auth-container,
-  .register-container,
-  .login-container {
-    flex-direction: column; /* Stack panels vertically */
-    /* Use dvh (Dynamic Viewport Height) for mobile browsers */
-    height: 100vh; /* Fallback */
-    height: 100dvh; 
-    overflow: hidden; 
+  /* 1. Hide Desktop Sidebar completely */
+  .desktop-sidebar {
+    display: none !important;
   }
 
-  /* --- Hide Left Panel --- */
-  .left-panel {
-    display: none;
+  /* 2. Hide Desktop Top Bar */
+  .top-bar {
+    display: none !important;
   }
 
-  /* --- Right Panel (Form) --- */
-  .right-panel {
-    padding: 1.5rem;
-    width: 100%;
-    height: 100%;
-    
-    /* Flex Setup */
-    display: flex;
-    flex-direction: column;
-    /* We DO NOT use justify-content here anymore */
-    /* We allow the child to center itself */
-    overflow-y: auto; /* Allows scrolling if screen is too short (landscape) */
+  /* 3. Ensure Main Area takes full width */
+  .main-area {
+    width: 100vw !important;
+    flex: 1;
   }
 
-  .form-wrapper {
-    width: 100%;
-    max-width: 400px;
-    /* This is the magic trick for perfect centering */
-    margin: auto; 
+  /* 4. Ensure Mobile Header is visible */
+  .mobile-header {
+    display: flex !important;
   }
 
-  /* --- Font Size Fixes --- */
-  .form-header h2 {
-    font-size: 1.75rem; 
-    margin-bottom: 0.5rem;
-    text-align: center; 
-  }
-
-  .form-header p {
-    font-size: 0.9rem;
-    text-align: center; 
-  }
-
-  .form-group label {
-    font-size: 0.85rem;
-  }
-
-  .form-input {
-    padding: 12px 14px; 
-    font-size: 0.9rem;
-  }
-
-  .submit-btn {
-    font-size: 0.95rem;
-    padding: 12px;
+  /* 5. Show delete button on mobile without hover */
+  .delete-btn {
+    display: block !important;
   }
 }
 
-/* --- Extra Small Screens (Small Phones) --- */
-@media (max-width: 480px) {
-  .form-header h2 {
-    font-size: 1.5rem;
+/* --- Modal Styles --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(4px);
+}
+.modal-content {
+  background: var(--dash-card);
+  border: 1px solid var(--dash-border);
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.2s ease-out;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
   }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
 
-  .row-split {
-    flex-direction: column; 
-    gap: 1rem;
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.modal-title {
+  color: var(--text-dark-main);
+  font-size: 1.25rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.modal-text {
+  color: var(--text-dark-muted);
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--dash-border);
+  background: var(--dash-bg);
+  color: white;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+}
+.modal-input:focus {
+  outline: none;
+  border-color: #0fbda6;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-cancel {
+  background: transparent;
+  color: #9ca3af;
+  border: 1px solid var(--dash-border);
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.btn-create {
+  background: #0fbda6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn-delete-confirm {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* General Styles */
+.nav-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.delete-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: #ef4444;
+  padding: 4px;
+  cursor: pointer;
+}
+.nav-item:hover .delete-btn {
+  display: block;
+}
+.chat-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+  flex: 1;
+}
+.typing-text {
+  font-style: italic;
+  color: var(--text-dark-muted);
+  font-size: 0.9rem;
+  display: inline-block;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+@keyframes pulse {
+  0% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.4;
   }
 }
 /* =========================================
