@@ -45,7 +45,7 @@ const Login = () => {
     try {
       // REPLACE with your actual API endpoint
       const response = await axios.post(
-        "http://localhost:3000/api/auth/login",
+        "https://promptly-9p83.onrender.com/api/auth/login",
         {
           email: formData.email,
           password: formData.password,

@@ -58,7 +58,7 @@ const Register = () => {
 
       // 2. API Call
       const response = await axios.post(
-        "http://localhost:3000/api/auth/register",
+        "https://promptly-9p83.onrender.com/api/auth/register",
         payload,
         {
           withCredentials: true, // Include if your backend handles cookies/sessions

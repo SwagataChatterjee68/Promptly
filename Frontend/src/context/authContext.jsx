@@ -11,7 +11,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const verifyUser = async () => {
       try {
-        const res = await axios.get('http://localhost:3000/api/auth/profile', {
+        const res = await axios.get('https://promptly-9p83.onrender.com/api/auth/profile', {
           withCredentials: true
         });
         
@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await axios.get('http://localhost:3000/api/auth/logout',{ withCredentials: true });
+      await axios.get('https://promptly-9p83.onrender.com/api/auth/logout',{ withCredentials: true });
       setUser(null);
     } catch (error) {
       console.error("Logout failed", error);

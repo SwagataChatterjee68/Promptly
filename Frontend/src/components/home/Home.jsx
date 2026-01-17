@@ -19,7 +19,7 @@ import {
   AlertTriangle, // Used for delete warning
 } from "lucide-react";
 
-const API_URL = "http://localhost:3000";
+const API_URL = "https://promptly-9p83.onrender.com";
 
 const Home = () => {
   const { user, logout } = useAuth();
