@@ -10,21 +10,33 @@ import {
   LogOut,
   ArrowUp,
   Menu,
+  Mic,
   X,
   MoreVertical,
   MessageSquare,
   Loader2,
-  Trash2, // <--- 1. Import Trash Icon
+  Trash2,
+  AlertTriangle, // Used for delete warning
 } from "lucide-react";
-import { confirm } from "react-confirm-box"; 
+
 const API_URL = "http://localhost:3000";
 
 const Home = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  // --- UI State ---
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // --- Modals State ---
+  const [isTitleModalOpen, setIsTitleModalOpen] = useState(false); // Create Chat Modal
+  const [newChatTitle, setNewChatTitle] = useState("");
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false); // Delete Chat Modal
+  const [chatToDeleteId, setChatToDeleteId] = useState(null); // Stores ID of chat to delete
+
+  // --- Chat State ---
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
@@ -113,59 +125,75 @@ const Home = () => {
 
   // --- Handlers ---
 
-  // <--- 2. DELETE CHAT HANDLER ---
-  const handleDeleteChat = async (e, chatId) => {
-    e.stopPropagation(); // Prevent clicking the chat itself
+  // 1. Initial Click on Trash Icon (Opens Modal)
+  const handleDeleteClick = (e, chatId) => {
+    e.stopPropagation(); // Stop navigation to chat
+    setChatToDeleteId(chatId);
+    setIsDeleteModalOpen(true);
+  };
 
-    if(!window.confirm("Are you sure you want to delete this chat?")) {
-      return;
-    }
+  // 2. Actual Delete Action (Called from Modal)
+  const handleConfirmDelete = async () => {
+    if (!chatToDeleteId) return;
 
     try {
-      await axios.delete(`${API_URL}/api/chat/${chatId}`, { withCredentials: true });
+      await axios.delete(`${API_URL}/api/chat/${chatToDeleteId}`, {
+        withCredentials: true,
+      });
 
-      setSessions((prev) => prev.filter((session) => session._id !== chatId));
+      // Update UI
+      setSessions((prev) =>
+        prev.filter((session) => session._id !== chatToDeleteId)
+      );
 
-      if (activeSessionId === chatId) {
+      if (activeSessionId === chatToDeleteId) {
         setActiveSessionId(null);
         setMessages([]);
       }
+
+      // Close Modal
+      setIsDeleteModalOpen(false);
+      setChatToDeleteId(null);
     } catch (error) {
-      console.error("Failed to delete chat:", error);
-      // You can also use confirm() for alerts if you want, or just standard alert
-      alert("Could not delete chat"); 
+      alert("Could not delete chat");
+      setIsDeleteModalOpen(false);
     }
   };
-  
 
-  const handleNewChat = () => {
-    setActiveSessionId(null);
-    setMessages([]);
+  const handleNewChatClick = () => {
+    setNewChatTitle("");
+    setIsTitleModalOpen(true);
     setIsSidebarOpen(false);
+  };
+
+  const handleCreateChat = async (e) => {
+    e.preventDefault();
+    if (!newChatTitle.trim()) return;
+
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/chat`,
+        { title: newChatTitle },
+        { withCredentials: true }
+      );
+
+      const newChat = response.data.chat;
+      setSessions((prev) => [newChat, ...prev]);
+      setActiveSessionId(newChat._id);
+      setMessages([]);
+      setIsTitleModalOpen(false);
+    } catch (error) {
+      console.error("Failed to create chat:", error);
+      alert("Failed to create chat.");
+    }
   };
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
-    let chatId = activeSessionId;
 
-    if (!chatId) {
-      try {
-        const dynamicTitle =
-          inputMessage.trim().substring(0, 30) +
-          (inputMessage.length > 30 ? "..." : "");
-        const response = await axios.post(
-          `${API_URL}/api/chat`,
-          { title: dynamicTitle },
-          { withCredentials: true }
-        );
-        const newChat = response.data.chat;
-        setSessions((prev) => [newChat, ...prev]);
-        setActiveSessionId(newChat._id);
-        chatId = newChat._id;
-      } catch (e) {
-        console.error(e);
-        return;
-      }
+    if (!activeSessionId) {
+      setIsTitleModalOpen(true);
+      return;
     }
 
     const userMsg = {
@@ -179,15 +207,15 @@ const Home = () => {
     setInputMessage("");
     setIsLoading(true);
 
-    if (socket) socket.emit("ai-message", { content: msgText, chat: chatId });
+    if (socket)
+      socket.emit("ai-message", { content: msgText, chat: activeSessionId });
     else setIsLoading(false);
   };
 
-  // --- Helpers ---
-  const getAvatarUrl = () => {
-    if (!user) return "";
-    return `https://ui-avatars.com/api/?name=${user.fullName?.firstName}+${user.fullName?.lastName}&background=0fbda6&color=fff&bold=true`;
-  };
+  const getAvatarUrl = () =>
+    user
+      ? `https://ui-avatars.com/api/?name=${user.fullName?.firstName}+${user.fullName?.lastName}&background=0fbda6&color=fff&bold=true`
+      : "";
   const formatTime = (iso) =>
     new Date(iso).toLocaleTimeString([], {
       hour: "2-digit",
@@ -210,7 +238,98 @@ const Home = () => {
 
   return (
     <div className="dashboard-container">
-      {/* <--- 3. ADD THIS STYLE BLOCK FOR HOVER EFFECT --- */}
+      {/* --- CREATE CHAT MODAL --- */}
+      {isTitleModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <span className="modal-title">New Chat</span>
+              <button
+                onClick={() => setIsTitleModalOpen(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#9ca3af",
+                  cursor: "pointer",
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleCreateChat}>
+              <input
+                autoFocus
+                type="text"
+                className="modal-input"
+                placeholder="Enter chat title..."
+                value={newChatTitle}
+                onChange={(e) => setNewChatTitle(e.target.value)}
+              />
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="btn-cancel"
+                  onClick={() => setIsTitleModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-create"
+                  disabled={!newChatTitle.trim()}
+                >
+                  Create Chat
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- DELETE CHAT MODAL --- */}
+      {isDeleteModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <span className="modal-title" style={{ color: "#ef4444" }}>
+                <AlertTriangle size={20} /> Delete Chat
+              </span>
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#9ca3af",
+                  cursor: "pointer",
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <p className="modal-text">
+              Are you sure you want to delete this conversation? This action
+              cannot be undone and all messages will be lost.
+            </p>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="btn-cancel"
+                onClick={() => setIsDeleteModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-delete-confirm"
+                onClick={handleConfirmDelete}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Sidebar */}
       <aside className="sidebar desktop-sidebar">
         <div className="sidebar-header">
@@ -221,7 +340,7 @@ const Home = () => {
             <span>Promptly</span>
           </div>
         </div>
-        <button className="new-chat-btn" onClick={handleNewChat}>
+        <button className="new-chat-btn" onClick={handleNewChatClick}>
           <Plus size={18} /> New Chat
         </button>
 
@@ -254,7 +373,6 @@ const Home = () => {
                 }`}
                 onClick={() => handleSwitchSession(session._id)}
               >
-                {/* <--- 4. Updated Structure for Delete Button --- */}
                 <div className="chat-label">
                   <MessageSquare size={18} />
                   <span
@@ -267,11 +385,9 @@ const Home = () => {
                     {session.title || "Untitled Chat"}
                   </span>
                 </div>
-
                 <button
                   className="delete-btn"
-                  onClick={(e) => handleDeleteChat(e, session._id)}
-                  title="Delete Chat"
+                  onClick={(e) => handleDeleteClick(e, session._id)}
                 >
                   <Trash2 size={16} />
                 </button>
@@ -295,7 +411,6 @@ const Home = () => {
         <div className="drawer-backdrop" onClick={toggleSidebar}></div>
       )}
       <div className={`mobile-drawer ${isSidebarOpen ? "open" : ""}`}>
-        {/* ... (Keep your mobile drawer header code) ... */}
         <div className="drawer-header">
           <div className="drawer-title">Menu</div>
           <button className="icon-btn" onClick={toggleSidebar}>
@@ -304,14 +419,12 @@ const Home = () => {
         </div>
         <button
           className="new-chat-btn"
-          onClick={handleNewChat}
+          onClick={handleNewChatClick}
           style={{ marginBottom: "2rem" }}
         >
           <Plus size={18} /> New Chat
         </button>
-
         <div className="section-label">Previous Chats</div>
-        {/* Inside Mobile Drawer -> nav-menu */}
         <nav className="nav-menu" style={{ flex: 1, overflowY: "auto" }}>
           {sessions.map((session) => (
             <div
@@ -333,19 +446,15 @@ const Home = () => {
                   {session.title || "Untitled Chat"}
                 </span>
               </div>
-
-              {/* --- ADD THIS BUTTON HERE --- */}
               <button
                 className="delete-btn"
-                onClick={(e) => handleDeleteChat(e, session._id)}
-                title="Delete Chat"
+                onClick={(e) => handleDeleteClick(e, session._id)}
               >
                 <Trash2 size={16} />
               </button>
             </div>
           ))}
         </nav>
-        {/* ... (Keep your mobile footer code) ... */}
         <div
           className="sidebar-footer"
           style={{
@@ -372,12 +481,11 @@ const Home = () => {
 
       {/* Main Content */}
       <main className="main-area">
-        {/* ... (Keep your main area code exactly as it was) ... */}
         <header className="top-bar">
           <div className="chat-title">
             <h3>
               {sessions.find((s) => s._id === activeSessionId)?.title ||
-                "New Session"}
+                "Select a Chat"}
             </h3>
             <span className="status-badge">Active</span>
           </div>
@@ -439,7 +547,7 @@ const Home = () => {
 
         <div className="chat-content">
           <div className="date-separator">Today</div>
-          {messages.length === 0 && !isLoading && (
+          {(!activeSessionId || (messages.length === 0 && !isLoading)) && (
             <div
               style={{
                 textAlign: "center",
@@ -451,7 +559,28 @@ const Home = () => {
                 size={48}
                 style={{ margin: "0 auto", marginBottom: "1rem", opacity: 0.5 }}
               />
-              <p>Start a new conversation with Elliy.</p>
+              <p>
+                {activeSessionId
+                  ? "Start the conversation!"
+                  : "Create a new chat to begin."}
+              </p>
+              {!activeSessionId && (
+                <button
+                  onClick={handleNewChatClick}
+                  style={{
+                    marginTop: "1rem",
+                    background: "#0fbda6",
+                    border: "none",
+                    color: "white",
+                    padding: "10px 20px",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    fontWeight: 600,
+                  }}
+                >
+                  Create New Chat
+                </button>
+              )}
             </div>
           )}
           {messages.map((msg) => (
@@ -500,7 +629,7 @@ const Home = () => {
                 <Bot size={20} />
               </div>
               <div className="message-bubble">
-                <span className="typing-cursor"></span>
+                <span className="typing-text">Typing...</span>
               </div>
             </div>
           )}
@@ -509,18 +638,23 @@ const Home = () => {
 
         <div className="input-area-wrapper">
           <div className="input-container">
-            <button className="action-btn-round" onClick={handleNewChat}>
+            <button className="action-btn-round" onClick={handleNewChatClick}>
               <Plus size={20} />
             </button>
             <input
               type="text"
               className="main-input"
-              placeholder="Message..."
+              placeholder={
+                activeSessionId ? "Message..." : "Create a chat first..."
+              }
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              disabled={isLoading}
+              onClick={() => !activeSessionId && setIsTitleModalOpen(true)}
             />
+            <button className="action-btn-round">
+              <Mic size={20} />
+            </button>
             <button
               className="action-btn-round send-btn"
               onClick={handleSendMessage}
@@ -534,6 +668,6 @@ const Home = () => {
       </main>
     </div>
   );
-}
+};
 
 export default Home;

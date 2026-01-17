@@ -109,8 +109,9 @@ const Login = () => {
           {error && (
             <div
               style={{
-                backgroundColor: "#fee2e2",
-                color: "#ef4444",
+                backgroundColor: "rgba(239, 68, 68, 0.15)", // Dark red transparent
+                color: "#fca5a5", // Light red text
+                border: "1px solid rgba(239, 68, 68, 0.3)",
                 padding: "10px",
                 borderRadius: "8px",
                 marginBottom: "20px",

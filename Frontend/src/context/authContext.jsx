@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
     const verifyUser = async () => {
       try {
         const res = await axios.get('http://localhost:3000/api/auth/profile', {
-          withCredentials: true // CRITICAL: Sends the httpOnly cookie to backend
+          withCredentials: true
         });
         
         if (res.data.success) {
