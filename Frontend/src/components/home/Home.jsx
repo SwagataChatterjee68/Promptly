@@ -76,7 +76,7 @@ const Home = () => {
             `${API_URL}/api/message/${activeSessionId}`,
             {
               withCredentials: true,
-            },
+            }
           );
           setMessages(res.data.messages);
         } catch (err) {
@@ -142,7 +142,7 @@ const Home = () => {
 
       // Update UI
       setSessions((prev) =>
-        prev.filter((session) => session._id !== chatToDeleteId),
+        prev.filter((session) => session._id !== chatToDeleteId)
       );
 
       if (activeSessionId === chatToDeleteId) {
@@ -173,7 +173,7 @@ const Home = () => {
       const response = await axios.post(
         `${API_URL}/api/chat`,
         { title: newChatTitle },
-        { withCredentials: true },
+        { withCredentials: true }
       );
 
       const newChat = response.data.chat;
@@ -237,77 +237,6 @@ const Home = () => {
 
   return (
     <div className="dashboard-container">
-
-      <style>{`
-        /* --- CRITICAL MOBILE FIXES --- */
-        @media (max-width: 900px) {
-          /* 1. Hide Desktop Sidebar completely */
-          .desktop-sidebar { 
-            display: none !important; 
-          }
-          
-          /* 2. Hide Desktop Top Bar */
-          .top-bar { 
-            display: none !important; 
-          }
-          
-          /* 3. Ensure Main Area takes full width */
-          .main-area { 
-            width: 100vw !important;
-            flex: 1;
-          }
-          
-          /* 4. Ensure Mobile Header is visible */
-          .mobile-header { 
-            display: flex !important; 
-          }
-          
-          /* 5. Show delete button on mobile without hover */
-          .delete-btn { 
-            display: block !important; 
-          }
-        }
-
-        /* --- Modal Styles --- */
-        .modal-overlay {
-          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-          background: rgba(0, 0, 0, 0.75); z-index: 2000;
-          display: flex; justify-content: center; align-items: center;
-          backdrop-filter: blur(4px);
-        }
-        .modal-content {
-          background: var(--dash-card); border: 1px solid var(--dash-border);
-          padding: 2rem; border-radius: 12px; width: 90%; max-width: 400px;
-          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-          animation: fadeIn 0.2s ease-out;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-        .modal-title { color: var(--text-dark-main); font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
-        .modal-text { color: var(--text-dark-muted); margin-bottom: 1.5rem; font-size: 0.95rem; line-height: 1.5; }
-        
-        .modal-input {
-          width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--dash-border);
-          background: var(--dash-bg); color: white; margin-bottom: 1.5rem; font-size: 1rem;
-        }
-        .modal-input:focus { outline: none; border-color: #0fbda6; }
-        
-        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; }
-        
-        .btn-cancel { background: transparent; color: #9ca3af; border: 1px solid var(--dash-border); padding: 10px 20px; border-radius: 6px; cursor: pointer; }
-        .btn-create { background: #0fbda6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; }
-        .btn-delete-confirm { background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; }
-
-        /* General Styles */
-        .nav-item { display: flex; justify-content: space-between; align-items: center; }
-        .delete-btn { display: none; background: none; border: none; color: #ef4444; padding: 4px; cursor: pointer; }
-        .nav-item:hover .delete-btn { display: block; }
-        .chat-label { display: flex; align-items: center; gap: 10px; overflow: hidden; flex: 1; }
-        .typing-text { font-style: italic; color: var(--text-dark-muted); font-size: 0.9rem; display: inline-block; animation: pulse 1.5s infinite ease-in-out; }
-        @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
-      `}</style>
-
       {/* --- CREATE CHAT MODAL --- */}
       {isTitleModalOpen && (
         <div className="modal-overlay">
@@ -469,9 +398,7 @@ const Home = () => {
           <div className="user-profile">
             <img src={getAvatarUrl()} alt="User" className="avatar" />
             <div className="user-info">
-              <h4>
-                {user?.fullName?.firstName} {user?.fullName?.lastName}
-              </h4>
+              <h4>{user?.fullName?.firstName} {user?.fullName?.lastName}</h4>
               <span>{user?.email}</span>
             </div>
           </div>
