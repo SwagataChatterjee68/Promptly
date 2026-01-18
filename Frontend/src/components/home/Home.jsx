@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/authContext";
 import axios from "axios";
 import { io } from "socket.io-client";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   Bot,
   Plus,
@@ -76,7 +78,7 @@ const Home = () => {
             `${API_URL}/api/message/${activeSessionId}`,
             {
               withCredentials: true,
-            }
+            },
           );
           setMessages(res.data.messages);
         } catch (err) {
@@ -142,7 +144,7 @@ const Home = () => {
 
       // Update UI
       setSessions((prev) =>
-        prev.filter((session) => session._id !== chatToDeleteId)
+        prev.filter((session) => session._id !== chatToDeleteId),
       );
 
       if (activeSessionId === chatToDeleteId) {
@@ -173,7 +175,7 @@ const Home = () => {
       const response = await axios.post(
         `${API_URL}/api/chat`,
         { title: newChatTitle },
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       const newChat = response.data.chat;
@@ -398,7 +400,9 @@ const Home = () => {
           <div className="user-profile">
             <img src={getAvatarUrl()} alt="User" className="avatar" />
             <div className="user-info">
-              <h4>{user?.fullName?.firstName} {user?.fullName?.lastName}</h4>
+              <h4>
+                {user?.fullName?.firstName} {user?.fullName?.lastName}
+              </h4>
               <span>{user?.email}</span>
             </div>
           </div>
@@ -486,7 +490,6 @@ const Home = () => {
               {sessions.find((s) => s._id === activeSessionId)?.title ||
                 "Select a Chat"}
             </h3>
-            <span className="status-badge">Active</span>
           </div>
           <div className="top-actions">
             <button className="icon-btn" onClick={handleLogout} title="Logout">
@@ -500,7 +503,9 @@ const Home = () => {
             <Menu size={24} />
           </button>
           <div className="mobile-title-container">
-            <span className="mobile-title">Promptly</span>
+            <h3 className="mobile-title">Promptly
+              <span></span>
+            </h3>
           </div>
           <div style={{ position: "relative" }}>
             <button className="icon-btn" onClick={toggleMobileMenu}>
@@ -603,12 +608,40 @@ const Home = () => {
                 )}
               </div>
               <div className="message-bubble">
-                {msg.role === "model" && (
-                  <div className="bot-name">
-                    Elliy <span className="bot-tag">AI</span>
-                  </div>
+                {msg.role === "model" ? (
+                  <>
+                    {/* 1. Bot Name Header */}
+                    <div className="bot-name">
+                      Elliy <span className="bot-tag">AI</span>
+                    </div>
+
+                    {/* 2. Markdown Content */}
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        code({ node, inline, className, children, ...props }) {
+                          return !inline ? (
+                            <div className="code-block-wrapper">
+                              <code className={className} {...props}>
+                                {children}
+                              </code>
+                            </div>
+                          ) : (
+                            <code className="inline-code" {...props}>
+                              {children}
+                            </code>
+                          );
+                        },
+                      }}
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
+                  </>
+                ) : (
+                  // User Message
+                  <p>{msg.content}</p>
                 )}
-                <p>{msg.content}</p>
+
                 <div
                   style={{
                     fontSize: "0.65rem",
