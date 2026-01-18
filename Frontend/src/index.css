@@ -419,8 +419,7 @@ html,
   padding: 0.75rem 1rem;
   border-radius: 12px;
   font-size: 0.95rem;
-  line-height: 1.5;
-  max-width: 80%;
+  max-width: 50%;
   word-wrap: break-word;
 }
 .user .message-bubble {
@@ -594,10 +593,7 @@ html,
     padding: 1rem 0.5rem;
     width: 100%;
   }
-  .message-bubble {
-    max-width: 85%;
-    font-size: 0.9rem;
-  }
+  
 
   /* 4. Fix Input Area padding */
   .input-area-wrapper {
@@ -754,18 +750,18 @@ html,
 
   /* Mobile Content Adjustments */
   .main-area {
-    width: 100%;
+    width: 95%;
   }
   .chat-content {
     padding: 1rem;
-    gap: 1rem;
+    gap: 0.5rem;
   }
   .message-bubble {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     max-width: 70%;
   }
   .input-area-wrapper {
-    padding: 1rem;
+    padding: 0.5rem;
   }
 
   /* --- Mobile Drawer (Visible only when triggered) --- */
@@ -1227,9 +1223,8 @@ html,
 .message-bubble {
   padding: 0.75rem 1rem;
   border-radius: 12px;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  max-width: 80%;
+  font-size: 0.9rem;
+  max-width: 50%;
   word-wrap: break-word;
 }
 .user .message-bubble {
@@ -1608,7 +1603,7 @@ body, html, #root {
 .message-avatar { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .bot-avatar { background-color: var(--primary-color); color: white; }
 .user-avatar-img { width: 32px; height: 32px; border-radius: 50%; }
-.message-bubble { padding: 0.75rem 1rem; border-radius: 12px; font-size: 0.95rem; line-height: 1.5; max-width: 80%; word-wrap: break-word; }
+.message-bubble { padding: 0.5rem 1rem; border-radius: 12px; font-size: 0.85rem; max-width: 50%; word-wrap: break-word; }
 .user .message-bubble { background-color: var(--primary-color); color: #fff; border-top-right-radius: 2px; }
 .bot .message-bubble { background-color: var(--dash-card); border: 1px solid var(--dash-border); color: var(--text-dark-main); border-top-left-radius: 2px; }
 .bot-name { font-size: 0.75rem; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; color: var(--text-dark-muted); }
@@ -1683,8 +1678,8 @@ body, html, #root {
   .mobile-title { font-weight: 700; color: var(--text-dark-main); font-size: 1.1rem; }
 
   .main-area { width: 100vw; }
-  .chat-content { padding: 1rem 0.5rem; width: 100%; }
-  .message-bubble { max-width: 85%; font-size: 0.9rem; }
+  .chat-content { padding: 0.5rem 0.5rem; width: 95%; }
+  .message-bubble { max-width: 80%; font-size: 0.8rem; padding: 0.5rem 0.75rem; }
   .input-area-wrapper { padding: 0.75rem; padding-bottom: 1rem; }
   .delete-btn { display: block !important; }
 
